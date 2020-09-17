@@ -27,7 +27,7 @@ def outputPatentInfo(key, values):
             pass
         else:
             for i in values:
-                print('&s\t%s\t%s' % (current_patent,i,values[5]))
+                print('&s\t%s\t%s' % (key,i,values[5]))
         current_patent = None
         values = []
     except:
