@@ -17,19 +17,26 @@ def outputPatentInfo(key, values):
     #
 
 
+    cites = [ pat for pat in values if pat.count(',') == 0 ]
+    info = [ pat for pat in values if  pat.count(',') > 2 ]
+
     if debug:
         print("values is ", values)
         print("cites is ", cites)
         print("info is ", info)
 
     try:
-        if values[5] == "":
-            pass
+        if len(info) == 0:
+            print("%s\tbad missing patent info " % (key))
         else:
-            for i in values:
-                print('&s\t%s\t%s' % (key,i,values[5]))
-        current_patent = None
-        values = []
+            try:
+                cites_official = int( info[0].split(',')[11] )
+            except ValueError as e:
+                cites_official = 0
+
+            if len(cites) == cites_official:
+                for i in info:
+                    print(key,i,info[11])
     except:
         pass
 
@@ -77,5 +84,6 @@ def main():
 
 
 main()
+
 
 
