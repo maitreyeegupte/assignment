@@ -4,74 +4,109 @@
 from operator import itemgetter
 import sys
 
-current_patent = None
-current_patent_info = None
-current_patent_citations = []
+debug=False
 
-def outputPatentInfo():
-    global current_patent
-    global current_patent_info
-    global current_patent_citations
+def outputPatentInfo(key, values,citations):
 
-    if current_patent != None and current_patent_info != None:
+    #
+    # Our inputs are either 3070801	1963,1096,,"BE","",,1,,269,6,69,,1,,0,,,,,,,
+    # or 6009554	y
+    #
+    #
+    # So the "values" either have zero commas or multiple commas
+    #
+    cites = [ pat for pat in values if pat.count(',') == 0 ]
+    info = [ pat for pat in values if  pat.count(',') > 2 ]
+
+##    if debug:
+##        print("values is ", values)
+##        print("cites is ", cites)
+##        print("info is ", info)
+    if key != None and values != None:
+        cites = [ pat for pat in values if pat.count(',') == 0 ]
+        info = [ pat for pat in values if  pat.count(',') > 2 ]
         try:
-            citations = long(current_patent_info[11])
-            if citations == len(current_patent_citations):        
-                for i in current_patent_citations:
-                    print("%s\t%s\t%s" % (current_patent,i,current_patent_info[4]))
-            #else:
-            #    print("%s\tbad %d vs %d " % (current_patent, citations, len(current_patent_citations)))
-        except ValueError:
+            if len(info) == 0:  
+                print("%s\tbad missing patent info " % (key))
+            else:
+                try:
+                    
+                        cites_official = int( info[0].split(',')[5] )
+                        cite_number = int( info[0].split(',')[11] )
+                except ValueError as e:
+                    cites_official = 0
+                if citations != None:
+                    if len(citations) == cite_number:
+                        for i in citations:
+                            print("%s\t%s\t%s" % (key,i,cites_official))
+            #if len(cites) == cites_official:
+             #   print("%s\tok" % (key))
+#
+# It would be nice to use the counters in this example but it
+# causes the Java process to run out of heap space
+#
+#                sys.stderr.write("reporter:counter:PatentReducer,REDUCE_GOOD,1")
+                else:
+                    print("%s\tbad cites got %s expected %d " % (key, len(cites), cites_official))
+#                sys.stderr.write("reporter:counter:PatentReducer,REDUCE_BAD,1")
+        except ValueError as e:
             #
             # Something wrong in number format
             #
             pass
-        except Exception as e:
-            print("Something died", e)
+##    except Exception as e:
+##        print("Something died", e)
 
-    current_patent = None
-    current_patent_info = None
-    current_patent_citations = []
+    
 
 def main():
-    global current_patent
-    global current_patent_info
-    global current_patent_citations
-
     current_patent = None
+    values = []
+    citations = []
+
     debug = False
 
     # input comes from STDIN
     for line in sys.stdin:
-        # parse the input we got from mapper.py
-        line = line.rstrip()
-        if line:
-            key, value = line.split('\t', 1)
+        line = line.rstrip('\n')
 
-            # convert count (currently a string) to int
-            try:
-                patent = long(key)
-            except ValueError:
+        # parse the input we got from mapper.py
+        try:
+            key, value = line.split('\t', 1)
+        except:
+            print('Improperly formatted: *', line, '*')
+            # Improperly formatted, so ignore
+            continue
+
+        # convert count (currently a string) to int
+        try:
+            patent = int(key)
+        except ValueError:
             # key was not a number, so silently
             # ignore/discard this line
-                continue
+            continue
 
-        # this IF-switch only works because Hadoop sorts map output
-        # by key (here: word) before it is passed to the reducer
-
-            if current_patent != patent:
-                outputPatentInfo()
-
+        if len(value) > 1:
+            values = value.split(',')
             current_patent = patent
-            fields = value.split(',')
+        else:
+            current_patent = patent
+            citations = citations.append(value)
+        
 
-            if len(fields) > 1:
-                current_patent_info = fields
-            else:
-                current_patent_citations.append(value)
+        if current_patent:
+            outputPatentInfo(current_patent,values,citations)
+        else:
+            current_patent = patent
+            values = value.split(',')
+            outputPatentInfo(current_patent,values,citations)
+
+
         
     # do not forget to output the last word if needed!
-    outputPatentInfo()
+    if current_patent:
+        outputPatentInfo(current_patent, values,citations)
+
 
 
 main()
