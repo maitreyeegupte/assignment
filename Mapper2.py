@@ -1,37 +1,36 @@
-"#!/usr/bin/env python"
+#!/usr/bin/env python
 """mapper.py"""
 
 import sys
 
-debug = False
+# input comes from STDIN (standard input)
 for line in sys.stdin:
-    line = line.rstrip('\n')
     # split the line into CSV fields
-    try:
+    line = line.rstrip()
+    if line:
         words = line.split(",")
-    except:
-        #
-
-        # Can't split, so invalid line
-        #
-        continue
-    try:
-        if len(words) == 3:
-        
-            print('%s\t%s\t%s' % (words[1],words[0],words[2]))
-        else:
-        
-            print('%s\t%s\t%s' % (words[1],words[0],""))
-
-    except:
-        print("No output")
-    
-
-    else:
-        try:
-            print('%s\t%s' % (words[0], ','.join(words[1:])))
-        except Exception as e:
-            
+        if len(words) < 2:
+            #
+            # It's a citation
+            #
+            lineSplit = line.split('\t')
+            try:
+                if len(lineSplit) == 3:
+                    print('%s\t%s\t%s' % (lineSplit[1], lineSplit[0], lineSplit[2]))
+                else:
+                    print('%s\t%s\t%s' % (lineSplit[1], lineSplit[0],""))
+            except Exception as e:
                 # improperly formed citation number
-            print("Exception ", e);
-            pass
+                print("Exception ", e);
+                pass
+        else:
+            #
+            # It's patent info 
+            #
+            try:
+               if words[0] != '"PATENT"':       
+                   print('%s\t%s' % (words[0], ','.join(words[1:])))
+            except Exception as e:
+                # improperly formed citation number
+                print("Exception ", e);
+                pass
