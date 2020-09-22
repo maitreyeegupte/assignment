@@ -18,10 +18,10 @@ for line in sys.stdin:
     try:
         if len(words) == 3:
         
-            print('%s\t%s\t%s' % (words[1],words[2],words[0]))
+            print('%s\t%s\t%s' % (words[1],words[0],words[2]))
         else:
         
-            print('%s\t%s\t%s' % (words[1],words[2],""))
+            print('%s\t%s\t%s' % (words[1],words[0],""))
 
     except:
         print("No output")
